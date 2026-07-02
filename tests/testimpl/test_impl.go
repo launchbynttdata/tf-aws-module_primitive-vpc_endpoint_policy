@@ -51,13 +51,13 @@ func exerciseEndpointPolicyWrite(t *testing.T, client *ec2.Client, endpointID st
 	t.Helper()
 
 	mutatedPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"s3:ListAllMyBuckets","Resource":"*"},{"Effect":"Deny","Principal":"*","Action":"s3:DeleteBucket","Resource":"*"}]}`
-	t.Cleanup(func() {
+	defer func() {
 		_, restoreErr := client.ModifyVpcEndpoint(context.Background(), &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId:  aws.String(endpointID),
 			PolicyDocument: aws.String(originalPolicy),
 		})
 		assert.NoError(t, restoreErr)
-	})
+	}()
 
 	_, err := client.ModifyVpcEndpoint(context.Background(), &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId:  aws.String(endpointID),
