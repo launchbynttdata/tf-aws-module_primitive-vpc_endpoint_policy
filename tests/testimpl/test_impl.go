@@ -14,9 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestComposableComplete verifies the deployed VPC endpoint policy.
+// TestComposableComplete verifies the deployed VPC endpoint policy and exercises a reversible policy update.
 func TestComposableComplete(t *testing.T, ctx types.TestContext) {
-	verifyEndpointPolicy(t, ctx)
+	client, endpointID, policy := verifyEndpointPolicy(t, ctx)
+	exerciseEndpointPolicyWrite(t, client, endpointID, policy)
 }
 
 // TestComposableCompleteReadOnly verifies the deployed VPC endpoint policy using read-only AWS API calls.
@@ -24,7 +25,7 @@ func TestComposableCompleteReadOnly(t *testing.T, ctx types.TestContext) {
 	verifyEndpointPolicy(t, ctx)
 }
 
-func verifyEndpointPolicy(t *testing.T, ctx types.TestContext) {
+func verifyEndpointPolicy(t *testing.T, ctx types.TestContext) (*ec2.Client, string, string) {
 	opts := ctx.TerratestTerraformOptions()
 	region := terraform.Output(t, opts, "region")
 	endpointID := terraform.Output(t, opts, "vpc_endpoint_id")
@@ -42,6 +43,25 @@ func verifyEndpointPolicy(t *testing.T, ctx types.TestContext) {
 	require.Len(t, output.VpcEndpoints, 1)
 
 	assert.JSONEq(t, canonicalJSON(t, policy), canonicalJSON(t, aws.ToString(output.VpcEndpoints[0].PolicyDocument)))
+
+	return client, endpointID, policy
+}
+
+func exerciseEndpointPolicyWrite(t *testing.T, client *ec2.Client, endpointID string, originalPolicy string) {
+	t.Helper()
+
+	mutatedPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"s3:ListAllMyBuckets","Resource":"*"},{"Effect":"Deny","Principal":"*","Action":"s3:DeleteBucket","Resource":"*"}]}`
+	_, err := client.ModifyVpcEndpoint(context.Background(), &ec2.ModifyVpcEndpointInput{
+		VpcEndpointId:  aws.String(endpointID),
+		PolicyDocument: aws.String(mutatedPolicy),
+	})
+	require.NoError(t, err)
+
+	_, err = client.ModifyVpcEndpoint(context.Background(), &ec2.ModifyVpcEndpointInput{
+		VpcEndpointId:  aws.String(endpointID),
+		PolicyDocument: aws.String(originalPolicy),
+	})
+	require.NoError(t, err)
 }
 
 func canonicalJSON(t *testing.T, value string) string {

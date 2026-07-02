@@ -51,6 +51,7 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 data "aws_iam_policy_document" "endpoint" {
+  # The wildcard principal keeps this fixture account-agnostic; the policy is scoped to the test endpoint.
   statement {
     effect    = "Allow"
     actions   = ["s3:ListAllMyBuckets"]

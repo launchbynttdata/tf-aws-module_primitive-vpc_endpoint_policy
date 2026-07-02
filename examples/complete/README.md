@@ -19,7 +19,6 @@ This example creates a complete VPC endpoint policy deployment with the dependen
 
 data "aws_region" "current" {}
 
-data "aws_caller_identity" "current" {}
 
 module "resource_names" {
   source  = "terraform.registry.launch.nttdata.com/module_library/resource_name/launch"
@@ -59,11 +58,15 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 data "aws_iam_policy_document" "endpoint" {
+  # The wildcard principal keeps this fixture account-agnostic; the policy is scoped to the test endpoint.
   statement {
     effect    = "Allow"
     actions   = ["s3:ListAllMyBuckets"]
     resources = ["*"]
-    principals { type = "*" identifiers = ["*"] }
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
   }
 }
 
