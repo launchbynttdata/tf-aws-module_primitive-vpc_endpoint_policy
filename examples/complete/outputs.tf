@@ -12,15 +12,22 @@
 
 output "id" {
   description = "The VPC endpoint policy ID."
-  value       = aws_vpc_endpoint_policy.endpoint_policy.id
+  value       = module.endpoint_policy.id
 }
-
 output "policy" {
   description = "The configured VPC endpoint policy JSON."
-  value       = aws_vpc_endpoint_policy.endpoint_policy.policy
+  value       = module.endpoint_policy.policy
 }
-
 output "vpc_endpoint_id" {
   description = "The VPC endpoint ID."
-  value       = aws_vpc_endpoint_policy.endpoint_policy.vpc_endpoint_id
+  value       = module.endpoint_policy.vpc_endpoint_id
+}
+output "expected_vpc_endpoint_id" {
+  description = "Expected VPC endpoint ID."
+  value       = aws_vpc_endpoint.s3.id
+}
+
+output "region" {
+  description = "The AWS Region where the example resources are deployed."
+  value       = data.aws_region.current.region
 }

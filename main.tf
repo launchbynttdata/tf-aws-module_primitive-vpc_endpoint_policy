@@ -10,8 +10,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-resource "random_string" "string" {
-  length  = var.length
-  numeric = var.number
-  special = var.special
+resource "aws_vpc_endpoint_policy" "endpoint_policy" {
+  vpc_endpoint_id = var.vpc_endpoint_id
+  policy          = var.policy
+  region          = var.region
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+    }
+  }
 }

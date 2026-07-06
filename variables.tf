@@ -10,25 +10,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-variable "length" {
-  description = "Length of the random string to generate."
-  type        = number
-  default     = 24
+# -----------------------------------------------------------------------------
+# Required
+# -----------------------------------------------------------------------------
+
+variable "vpc_endpoint_id" {
+  description = "ID of the VPC endpoint to attach the policy to."
+  type        = string
 
   validation {
-    condition     = var.length > 0 && var.length < 100
-    error_message = "Length must be a positive integer less than 100."
+    condition     = can(regex("^vpce-[a-z0-9]+$", var.vpc_endpoint_id))
+    error_message = "vpc_endpoint_id must start with vpce-."
   }
 }
 
-variable "number" {
-  description = "Whether the random string should include numbers. Defaults to true."
-  type        = bool
-  default     = true
-}
+# -----------------------------------------------------------------------------
+# Optional
+# -----------------------------------------------------------------------------
 
-variable "special" {
-  description = "Whether the random string should include special characters. Defaults to false."
-  type        = bool
-  default     = false
+variable "policy" {
+  description = "JSON policy document for the VPC endpoint. Defaults to the provider-managed policy when omitted."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.policy == null ? true : can(jsondecode(var.policy))
+    error_message = "policy must be valid JSON."
+  }
+}
+variable "timeouts" {
+  description = "Timeouts for creating or deleting the endpoint policy."
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+  })
+  default = null
+}
+variable "region" {
+  description = "AWS Region where this resource is managed. Defaults to the provider-configured Region."
+  type        = string
+  default     = null
 }
