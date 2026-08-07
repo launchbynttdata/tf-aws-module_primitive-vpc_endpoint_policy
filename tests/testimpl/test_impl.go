@@ -27,12 +27,12 @@ func TestComposableCompleteReadOnly(t *testing.T, ctx types.TestContext) {
 
 func verifyEndpointPolicy(t *testing.T, ctx types.TestContext) (*ec2.Client, string, string) {
 	opts := ctx.TerratestTerraformOptions()
-	region := terraform.Output(t, opts, "region")
-	endpointID := terraform.Output(t, opts, "vpc_endpoint_id")
-	policy := terraform.Output(t, opts, "policy")
+	region := terraform.OutputContext(t, context.Background(), opts, "region")
+	endpointID := terraform.OutputContext(t, context.Background(), opts, "vpc_endpoint_id")
+	policy := terraform.OutputContext(t, context.Background(), opts, "policy")
 
 	require.NotEqual(t, "", endpointID)
-	assert.Equal(t, terraform.Output(t, opts, "expected_vpc_endpoint_id"), endpointID)
+	assert.Equal(t, terraform.OutputContext(t, context.Background(), opts, "expected_vpc_endpoint_id"), endpointID)
 
 	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(region))
 	require.NoError(t, err)
